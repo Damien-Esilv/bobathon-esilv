@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+"""Write ``.skore`` for this repo.
+
+Signs in to the lab hub, picks a workspace, and stores a workspace API key.
+Does not write ``.bob/mcp.json`` or launch Bob.
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+HARNESS = "bob"
+HUB_URL = "https://api.skore.probabl.ai"
+
+
+def force_interactive() -> None:
+    """Let ``skore-cli`` show its workspace picker for this sign-in.
+
+    The picker is skipped when an agent harness is detected in the environment
+    (Bob, Cursor, Pi, ...). This script is run by a human at a terminal, so drop
+    those markers; otherwise anyone in more than one Hub workspace hits
+    "pass a saved workspace in .skore or run interactively to pick one" and no
+    ``.skore`` is ever written.
+    """
+    from skore_cli._agents import AGENTS
+
+    for agent in AGENTS.values():
+        env_var = getattr(agent, "env_var", None)
+        if env_var:
+            os.environ.pop(env_var, None)
+
+
+def write_skore() -> None:
+    """Save ``.skore`` when this repo does not already have one."""
+    import click
+    from skore_cli._hub_auth import ensure_login
+    from skore_cli._skore import auth as _auth
+    from skore_cli._skore import resolve_hub_uri
+    from skore_cli.agent import _client
+    from skore_cli.agent._commands import (
+        _create_workspace_api_key,
+        _resolve_membership,
+    )
+    from skore_cli.agent._skore_file import SkoreConfig
+
+    config = SkoreConfig.load(REPO_ROOT)
+    if (
+        config is not None
+        and config.api_key
+        and config.workspace
+        and config.hub_url.rstrip("/") == HUB_URL
+    ):
+        print(f".skore already exists for workspace {config.workspace!r}")
+        return
+
+    hub_url = resolve_hub_uri(HUB_URL, _auth)
+    try:
+        token = ensure_login(timeout=600)
+        user_id, memberships = _client.me(hub_url, token)
+        if not memberships:
+            raise SystemExit(
+                "You are not in a Hub workspace. One teammate creates a "
+                "workspace on https://skore.probabl.ai named like your "
+                "Kaggle team, invites the others, then you re-run this script."
+            )
+        saved_workspace = config.workspace if config else None
+        membership = _resolve_membership(memberships, saved_workspace)
+        api_key = _create_workspace_api_key(
+            hub_url, token, user_id, membership, HARNESS
+        )
+        path = SkoreConfig(
+            hub_url=hub_url,
+            workspace=membership.public_id,
+            workspace_id=membership.workspace_id,
+            api_key=api_key,
+            harness=HARNESS,
+        ).save(REPO_ROOT)
+        path.chmod(0o600)
+    except click.Abort:
+        raise SystemExit(1) from None
+    except click.ClickException as exc:
+        message = exc.format_message().replace(
+            "`skore agent`", "`python scripts/skore-agent`"
+        )
+        raise SystemExit(message) from exc
+
+    print(f"wrote {path} for workspace {membership.public_id!r}")
+
+
+def main() -> None:
+    """Write ``.skore`` using the skore-cli installed in this interpreter."""
+    os.environ["SKORE_HUB_URI"] = HUB_URL
+    try:
+        force_interactive()
+        write_skore()
+    except ImportError:
+        raise SystemExit(
+            "skore-cli is not installed in this interpreter. "
+            "Activate the virtual environment and install it first."
+        ) from None
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(130)
