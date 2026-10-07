@@ -18,6 +18,7 @@ import json
 import sqlite3
 import sys
 import textwrap
+import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -199,13 +200,15 @@ def test_hub_accepts_the_api_key():
 
 
 def _same_workspace(project_id: str) -> bool:
-    path = (
+    def normalise(s: str) -> str:
+        return unicodedata.normalize("NFC", s).lower()
+
+    path = normalise(
         project_id.removeprefix("file:")
         .lstrip("/")
         .replace("\\", "/")
-        .lower()
     )
-    return path == REPO_ROOT.as_posix().lstrip("/").lower()
+    return path == normalise(REPO_ROOT.as_posix().lstrip("/"))
 
 
 def test_bob_skill_permission_is_toggled():
