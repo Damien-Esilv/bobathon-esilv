@@ -199,7 +199,12 @@ def test_hub_accepts_the_api_key():
 
 
 def _same_workspace(project_id: str) -> bool:
-    path = project_id.removeprefix("file:").lstrip("/").lower()
+    path = (
+        project_id.removeprefix("file:")
+        .lstrip("/")
+        .replace("\\", "/")
+        .lower()
+    )
     return path == REPO_ROOT.as_posix().lstrip("/").lower()
 
 

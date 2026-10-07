@@ -2,8 +2,7 @@
 
 ## 1. Data into `data/`
 
-Competition tables are **not** in git. Download the files from the [competition **Data** tab](https://www.kaggle.com/competitions/bobathon-esilv/data) and unzip them into a `data/` folder at the repo root.
-
+Competition tables are in git, folder `data/`.
 You should see `X_train.csv`, `y_train.csv`, `X_test.csv`, and `sample_submission.csv`. Every teammate needs these CSVs locally.
 
 ### What the data is about and the goal
