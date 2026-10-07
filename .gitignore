@@ -10,6 +10,10 @@
 # ...but the workspace rules do ship with the repo
 !.bob/rules/
 
+# per-machine agent symlinks pointing into .bob/skills
+.pi/
+.agents/
+
 # agent scratch probes
 scratch/
 
