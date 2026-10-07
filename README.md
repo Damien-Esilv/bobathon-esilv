@@ -43,7 +43,7 @@ python -m pytest
 
 See [SETUP.md step 5](docs/SETUP.md#5-install-skore-and-check-your-setup) for details.
 
-**You cannot Day 1 until the last line says** `all passed`**.** Without a working `.skore`, you cannot push reports to Skore Hub, and every Kaggle Submission needs a Hub report URL.
+**You cannot proceed to Day 1 until the last line says** `all passed`**.** Without a working `.skore`, you cannot push reports to Skore Hub, and every Kaggle Submission needs a Hub report URL.
 
 ### Step 2 — Day 1 ([DAY1.md](docs/DAY1.md))
 
