@@ -4,8 +4,8 @@
 
 - **Project / dataset:** Parkinson's motor score regression (bobathon-esilv)
 - **Goal:** Predict the unbiased true OFF MDS-UPDRS motor score for each patient visit (RMSE minimisation, Kaggle holdout by patient)
-- **Last experiment:** 08_clinical_gbdt — done
-- **Last result:** Pooled RMSE 6.040 (5-fold GroupKFold) — **−27.1 % vs 07_tuning**
+- **Last experiment:** 09_sequence_transformer — done
+- **Last result:** Pooled RMSE **3.308** (5-fold GroupKFold) — **−45.2 % vs 08_clinical_gbdt**
 
 - **Workspace decisions** (immutable unless the user pivots):
   - tabular library: pandas - recorded: 2025-10-07
@@ -37,6 +37,7 @@
 | `06_features` | Clinical feature engineering (9 engineered features) | done | — | — |
 | `07_tuning` | Tuned HGBR grid search + blended ensemble | done | RMSE ≈ 8.29 | — |
 | `08_clinical_gbdt` | Dual-branch LightGBM + Bateman PK + MixedLM priors + rater calibration | done | Pooled 6.040 / Branch-A 5.626 / Branch-B 6.561 | [design note](08_clinical_gbdt.md) |
+| `09_sequence_transformer` | Bi-directional SeqNet — anchored residual + stochastic OFF masking | done | Pooled 3.308 / Branch-A 2.938 / Branch-B 3.751 | [design note](09_sequence_transformer.md) |
 
 ## Backlog
 

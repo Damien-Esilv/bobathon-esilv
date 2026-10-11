@@ -1,3 +1,4 @@
 skore-cli==0.4.1
 lightgbm
+torch
 pytest
