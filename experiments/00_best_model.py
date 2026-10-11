@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 # ↓ Change this filename to point at the current winning experiment.
-WINNER = "07_tuning.py"
+WINNER = "08_clinical_gbdt.py"
 
 # --- loader (do not edit below this line) ---
 _winner_path = Path(__file__).parent / WINNER
