@@ -47,6 +47,10 @@ class DualBranchGBDT(BaseEstimator, RegressorMixin):
         L2 regularisation term for both branches. Default 0.1.
     random_state:
         Random seed for reproducibility. Default 42.
+    n_jobs:
+        Number of parallel threads for LightGBM. Default -1 (all cores).
+        Set to 1 to avoid OpenMP/pthreads conflicts when PyTorch is loaded
+        in the same process (required on macOS with Apple Silicon).
     verbose:
         LightGBM verbosity. Default -1 (silent).
 
@@ -75,6 +79,7 @@ class DualBranchGBDT(BaseEstimator, RegressorMixin):
         min_child_samples: int = 20,
         reg_lambda: float = 0.1,
         random_state: int = 42,
+        n_jobs: int = -1,
         verbose: int = -1,
     ) -> None:
         self.off_missing_col = off_missing_col
@@ -84,6 +89,7 @@ class DualBranchGBDT(BaseEstimator, RegressorMixin):
         self.min_child_samples = min_child_samples
         self.reg_lambda = reg_lambda
         self.random_state = random_state
+        self.n_jobs = n_jobs
         self.verbose = verbose
 
     def _make_lgbm(self) -> LGBMRegressor:
@@ -96,7 +102,7 @@ class DualBranchGBDT(BaseEstimator, RegressorMixin):
             reg_lambda=self.reg_lambda,
             random_state=self.random_state,
             verbose=self.verbose,
-            n_jobs=-1,
+            n_jobs=self.n_jobs,
         )
 
     def _get_feature_matrix(self, X: pd.DataFrame) -> tuple[pd.DataFrame, np.ndarray]:

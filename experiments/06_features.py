@@ -14,16 +14,14 @@ import pandas as pd
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import GroupKFold
 from sklearn.pipeline import make_pipeline
-from skrub import TableVectorizer
-
-import skore
 from skore import Project, evaluate, login
+from skrub import TableVectorizer
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from parkinson.hub import load_skore_credentials  # noqa: E402
-from parkinson.features import build_features  # noqa: E402
+from parkinson.features import build_features
+from parkinson.hub import load_skore_credentials
 
 # %% [markdown]
 # ## Load data and apply clinical feature engineering

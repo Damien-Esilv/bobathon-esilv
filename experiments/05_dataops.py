@@ -11,18 +11,16 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import skrub
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import GroupKFold
-from skrub import TableVectorizer
-import skrub
-
-import skore
 from skore import Project, evaluate, login
+from skrub import TableVectorizer
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from parkinson.hub import load_skore_credentials  # noqa: E402
+from parkinson.hub import load_skore_credentials
 
 # %% [markdown]
 # ## Load data

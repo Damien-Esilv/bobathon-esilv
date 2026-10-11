@@ -1,4 +1,4 @@
-# Sequence Transformer Plan — Experiment 14
+# Sequence Transformer Plan — Experiment 9
 
 ## Top-Level Overview
 
@@ -376,7 +376,7 @@ behavior, and forward/backward determinism.
 
 **Status:** `[ ] pending`
 
-**Intent:** Record the design rationale, method, and results for experiment 14.
+**Intent:** Record the design rationale, method, and results for experiment 9.
 
 **Todo List:**
 1. Create `journal/09_sequence_transformer.md` with intent, method, acceptance
@@ -442,6 +442,5 @@ must be importable without triggering training. All training code lives inside
 `if __name__ == "__main__"` or inside `_cv_evaluate()`. The `run()` function
 itself trains on full data and writes the submission.
 
-### Experiment numbering gap (08 → 14)
-The user explicitly specified experiment 14. The gap (09–13) is intentional —
-treat as reserved for intermediate experiments. No action needed.
+### Experiment numbering gap (08 → 9)
+The user explicitly specified experiment 9.

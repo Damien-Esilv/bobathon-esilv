@@ -13,14 +13,12 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import GroupKFold
-
-import skore
 from skore import Project, evaluate, login
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from parkinson.hub import load_skore_credentials  # noqa: E402
+from parkinson.hub import load_skore_credentials
 
 # %% [markdown]
 # ## Load data

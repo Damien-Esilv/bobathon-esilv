@@ -15,14 +15,12 @@ from sklearn.impute import SimpleImputer
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import GroupKFold
 from sklearn.pipeline import make_pipeline
-
-import skore
 from skore import Project, evaluate, login
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from parkinson.hub import load_skore_credentials  # noqa: E402
+from parkinson.hub import load_skore_credentials
 
 # %% [markdown]
 # ## Load data

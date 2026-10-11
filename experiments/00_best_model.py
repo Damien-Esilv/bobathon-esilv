@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 # ↓ Change this filename to point at the current winning experiment.
-WINNER = "09_sequence_transformer.py"
+WINNER = "10_retrospective_smoothing.py"
 
 # --- loader (do not edit below this line) ---
 _winner_path = Path(__file__).parent / WINNER

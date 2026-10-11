@@ -10,15 +10,13 @@ from pathlib import Path
 
 import pandas as pd
 from sklearn.dummy import DummyRegressor
-
-import skore
 from skore import Project, evaluate, login
 
 # Locate repo root from this file's position (experiments/ is one level down).
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from parkinson.hub import load_skore_credentials  # noqa: E402
+from parkinson.hub import load_skore_credentials
 
 # %% [markdown]
 # ## Load data

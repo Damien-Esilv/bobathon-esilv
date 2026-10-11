@@ -4,8 +4,8 @@
 
 - **Project / dataset:** Parkinson's motor score regression (bobathon-esilv)
 - **Goal:** Predict the unbiased true OFF MDS-UPDRS motor score for each patient visit (RMSE minimisation, Kaggle holdout by patient)
-- **Last experiment:** 09_sequence_transformer — done
-- **Last result:** Pooled RMSE **3.308** (5-fold GroupKFold) — **−45.2 % vs 08_clinical_gbdt**
+- **Last experiment:** 10_retrospective_smoothing — done
+- **Last result:** Pooled blend RMSE **3.303** (Dual-regime ensemble, 5-fold) — beats SeqNet baseline 3.308 (P(blend < SeqNet) = 1.0000)
 
 - **Workspace decisions** (immutable unless the user pivots):
   - tabular library: pandas - recorded: 2025-10-07
@@ -30,14 +30,15 @@
 | Stem | Intent (one line) | Status | Headline result | Design note |
 |---|---|---|---|---|
 | `01_dummy` | DummyRegressor mean — establishes the error floor | done | RMSE ≈ 16.48 | [design note](01_dummy.md) |
-| `02_ridge` | Ridge regression with imputation — first linear model | done | — | — |
-| `03_hgbr` | HGBR with native NaN — beats ridge | done | — | — |
-| `04_skrub_tabular` | TableVectorizer + HGBR adds categorical columns | done | — | — |
-| `05_dataops` | skrub DataOps graph — baked GroupKFold | done | — | — |
-| `06_features` | Clinical feature engineering (9 engineered features) | done | — | — |
-| `07_tuning` | Tuned HGBR grid search + blended ensemble | done | RMSE ≈ 8.29 | — |
+| `02_ridge` | Ridge regression with imputation — first linear model | done | RMSE ≈ 10.60 | [design note](02_ridge.md) |
+| `03_hgbr` | HGBR with native NaN — beats ridge | done | RMSE ≈ 7.75 | [design note](03_hgbr.md) |
+| `04_skrub_tabular` | TableVectorizer + HGBR adds categorical columns | done | RMSE ≈ 7.53 | [design note](04_skrub_tabular.md) |
+| `05_dataops` | skrub DataOps graph — baked GroupKFold | done | RMSE ≈ 7.53 (DataOps graph) | [design note](05_dataops.md) |
+| `06_features` | Clinical feature engineering (9 engineered features) | done | RMSE ≈ 5.68 | [design note](06_features.md) |
+| `07_tuning` | Tuned HGBR grid search + blended ensemble | done | RMSE ≈ 5.57 | [design note](07_tuning.md) |
 | `08_clinical_gbdt` | Dual-branch LightGBM + Bateman PK + MixedLM priors + rater calibration | done | Pooled 6.040 / Branch-A 5.626 / Branch-B 6.561 | [design note](08_clinical_gbdt.md) |
 | `09_sequence_transformer` | Bi-directional SeqNet — anchored residual + stochastic OFF masking | done | Pooled 3.308 / Branch-A 2.938 / Branch-B 3.751 | [design note](09_sequence_transformer.md) |
+| `10_retrospective_smoothing` | Calibrated dual-regime ensemble (GBDT + SeqNet blend) | done | Pooled 3.303 / Branch-A 2.943 / Branch-B 3.737 | [design note](10_retrospective_smoothing.md) |
 
 ## Backlog
 
