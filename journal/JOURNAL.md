@@ -4,8 +4,8 @@
 
 - **Project / dataset:** Parkinson's motor score regression (bobathon-esilv)
 - **Goal:** Predict the unbiased true OFF MDS-UPDRS motor score for each patient visit (RMSE minimisation, Kaggle holdout by patient)
-- **Last experiment:** 10_retrospective_smoothing — done
-- **Last result:** Pooled blend RMSE **3.303** (Dual-regime ensemble, 5-fold) — beats SeqNet baseline 3.308 (P(blend < SeqNet) = 1.0000)
+- **Last experiment:** 12_multi_paradigm_bernstein_sota — ready to run
+- **Last result:** Bernstein OOF RMSE **3.2317** (exp-11, Monotonic Bernstein post-processor on RSR blend)
 
 - **Workspace decisions** (immutable unless the user pivots):
   - tabular library: pandas - recorded: 2025-10-07
@@ -39,6 +39,8 @@
 | `08_clinical_gbdt` | Dual-branch LightGBM + Bateman PK + MixedLM priors + rater calibration | done | Pooled 6.040 / Branch-A 5.626 / Branch-B 6.561 | [design note](08_clinical_gbdt.md) |
 | `09_sequence_transformer` | Bi-directional SeqNet — anchored residual + stochastic OFF masking | done | Pooled 3.308 / Branch-A 2.938 / Branch-B 3.751 | [design note](09_sequence_transformer.md) |
 | `10_retrospective_smoothing` | Calibrated dual-regime ensemble (GBDT + SeqNet blend) | done | Pooled 3.303 / Branch-A 2.943 / Branch-B 3.737 | [design note](10_retrospective_smoothing.md) |
+| `11_monotonic_bernstein_trajectory` | Monotone Bernstein post-processor on RSR blend — 6-regime evaluation | done | Bernstein OOF 3.2317 | [design note](11_monotonic_bernstein_trajectory.md) |
+| `12_multi_paradigm_bernstein_sota` | TD-SeqNet + Anchored GBDT + 6-regime SLSQP gating + Bernstein | ready | TBD | [design note](12_multi_paradigm_bernstein_sota.md) |
 
 ## Backlog
 
