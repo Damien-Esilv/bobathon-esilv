@@ -1,5 +1,8 @@
 """Retrospective smoothing ensemble for Parkinson's motor score prediction.
 
+Team: parKINGson
+Members: Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+
 Combines the `DualBranchGBDT` tabular model (08_clinical_gbdt) with the
 `SeqNet` bi-directional Transformer (09_sequence_transformer) under a
 calibrated dual-regime convex blend:

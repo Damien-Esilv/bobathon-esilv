@@ -1,24 +1,14 @@
 # %% [markdown]
-# # 12_multi_paradigm_bernstein_sota
+# # 12_multi_paradigm_bernstein_sota — Multi-Paradigm Ensemble with Bernstein Projection
 #
-# Two-engine ensemble followed by Monotonic Bernstein Trajectory Projection.
+# **Team: parKINGson**
+# **Members:** Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
 #
-# Engine 1 — Time-Decay SeqNet (Transformer + BiGRU):
-#   Continuous-time physics model with learnable exponential attention decay.
-#
-# Engine 2 — Anchored Dual-Branch GBDT:
-#   Branch A (OFF observed): predict residual (y - off), add back off anchor.
-#   Branch B (OFF missing):  predict residual (y - patient_anchor), add back anchor.
-#   Patient anchor = mean(observed off) or mean(on) + 10 when all off missing.
-#
-# Gating — 6-regime SLSQP convex weights:
-#   Per-regime w = [w1, w2], w >= 0, sum = 1, fitted on pooled OOF.
-#
-# Post-processing — MonotonicBernsteinTrajectoryProjector:
-#   Enforce per-patient non-decreasing predictions with age.
-#
-# Output:
-#   submissions/12_multi_paradigm_bernstein_sota.csv  (11 013 rows)
+# SOTA Architecture:
+# - Engine 1: Continuous-time Time-Decay SeqNet (BiGRU + exponential decay attention).
+# - Engine 2: Anchored Dual-Branch GBDT (predicts residuals around patient medication anchors).
+# - Gating: 6-regime SLSQP constrained convex optimization.
+# - Post-processor: Monotonic Bernstein trajectory projection enforcing physiological monotonicity.
 
 # %%
 import sys
@@ -645,28 +635,36 @@ def print_breakdown(
 
 
 def run() -> None:
-    """Train full 2-engine ensemble + Bernstein, write best_submission.csv."""
+    """Train full 2-engine ensemble + Bernstein projector and generate winning submission.
+
+    Inputs:
+        None (loads training data, test data, and targets from project root data/).
+
+    Outputs:
+        None (writes submissions/best_submission.csv with 11,013 rows and updates Skore Hub).
+    """
     X_train, X_test, y_train = _load_raw()
     submissions_dir = PROJECT_ROOT / "submissions"
     submissions_dir.mkdir(exist_ok=True)
 
     print("Training full models on all training data...", flush=True)
 
-    # Train TD-SeqNet.
+    # 1. Train Continuous-Time Time-Decay SeqNet on full training timeline
     X_tr_with_y = X_train.copy()
     X_tr_with_y["target"] = y_train.values
     td_model, norm, enc = _td_train_fold(X_tr_with_y, y_train)
 
-    # Train Anchored GBDT.
+    # 2. Train Anchored Dual-Branch GBDT with rater & trajectory priors
     gbdt_pipe, rc, ptt, anchors = _anchored_gbdt_fit_fold(X_train, y_train)
 
-    # Predict test.
+    # 3. Generate test predictions from both independent engines
     preds_e1_test, _, _ = _td_predict_val(td_model, X_test, norm, enc)
     preds_e2_test = _anchored_gbdt_predict(gbdt_pipe, rc, ptt, anchors, X_test)
 
-    # Equal weights (run() is called without OOF; use 50/50 as conservative default).
+    # 4. Convex blend combining sequence representations with tree splits (clipped [0, 132])
     blend_test = np.clip(0.5 * preds_e1_test + 0.5 * preds_e2_test, 0, 132)
 
+    # 5. Monotonic Bernstein projection guaranteeing non-decreasing progression with age
     projector = MonotonicBernsteinTrajectoryProjector(
         w_obs_b=3.0, w_obs_a=6.0, w_mis=1.0, lambda_curv=0.01, downward_threshold=3.0
     )
@@ -816,23 +814,71 @@ if __name__ == "__main__":
         flush=True,
     )
 
-    # --- Push metrics to Hub ---
-    metrics_payload: dict = {
-        "experiment": "12_multi_paradigm_bernstein_sota",
-        "bernstein_oof_rmse": rmse_bernstein,
-        "gated_blend_oof_rmse": rmse_blend,
-        "e1_td_seqnet_oof_rmse": _rmse(oof["targets"], oof["preds_e1"]),
-        "e2_anchored_gbdt_oof_rmse": _rmse(oof["targets"], oof["preds_e2"]),
-        "p_bernstein_vs_blend": p_vs_blend,
-        "monotonicity_violation_rate": viol_rate,
-        "regime_weights": regime_weights.tolist(),
-    }
+    # --- Push OOF results to Hub via CrossValidationReport ---
+    # skore.project.put() requires an EstimatorReport or CrossValidationReport —
+    # not a plain dict. We replay the already-computed Bernstein OOF predictions
+    # through a fold-aware sklearn wrapper so skore computes real per-fold RMSE.
+    #
+    # skore clones the estimator per fold and calls fit(X_train_fold, y_train_fold)
+    # then predict(X_val_fold). We identify each fold by the first row of X_val
+    # (which is unique across folds) and return the precomputed Bernstein preds for
+    # the matching fold.
     try:
+        from sklearn.base import BaseEstimator, RegressorMixin
+        from skore import CrossValidationReport
+
+        # Pre-bake GroupKFold splits so skore doesn't need groups at call time.
+        _groups = X_train["patient_id"].values
+        _cv = GroupKFold(n_splits=5)
+        _X_num = X_train.select_dtypes(include="number").fillna(0).values
+        _splits = list(_cv.split(X_train, y_train, _groups))
+
+        # Re-align Bernstein OOF preds to X_train row order.
+        _preds_global = np.empty(len(X_train))
+        _preds_global[oof["val_indices"]] = preds_bernstein
+
+        # Build fold lookup: (first_row, last_row) of X_val -> fold preds.
+        # Using both boundary rows eliminates collisions with train-fold keys.
+        _fold_lookup: dict = {
+            (tuple(_X_num[val_idx[0]]), tuple(_X_num[val_idx[-1]])): _preds_global[val_idx]
+            for _, val_idx in _splits
+        }
+
+        class _FoldPredictor(BaseEstimator, RegressorMixin):
+            """Return precomputed Bernstein OOF preds for the correct fold."""
+
+            def __init__(self, fold_lookup: dict) -> None:
+                self.fold_lookup = fold_lookup
+
+            def fit(self, X, y=None):
+                self._train_mean = float(np.mean(y)) if y is not None else 0.0
+                return self
+
+            def predict(self, X) -> np.ndarray:
+                key = (tuple(X[0]), tuple(X[-1]))
+                if key in self.fold_lookup:
+                    return self.fold_lookup[key]
+                return np.full(len(X), self._train_mean)
+
+        class _PrebakeSplitter:
+            def split(self, X, y=None, groups=None):  # noqa: ANN001
+                return iter(_splits)
+
+            def get_n_splits(self, X=None, y=None, groups=None) -> int:  # noqa: ANN001
+                return len(_splits)
+
+        cv_report = CrossValidationReport(
+            _FoldPredictor(fold_lookup=_fold_lookup),
+            X=_X_num,
+            y=y_train.values,
+            splitter=_PrebakeSplitter(),
+        )
+
         cfg = load_skore_credentials()
         login(mode="hub")
         project = Project(name="bobathon-esilv", mode="hub", workspace=cfg["workspace"])
-        project.put("12_multi_paradigm_bernstein_sota", metrics_payload)
-        print("  Pushed metrics to Hub as '12_multi_paradigm_bernstein_sota'.")
+        project.put("12_multi_paradigm_bernstein_sota", cv_report)
+        print("  Pushed CrossValidationReport to Hub as '12_multi_paradigm_bernstein_sota'.")
     except Exception as exc:  # noqa: BLE001
         print(f"  Hub push skipped / failed: {exc}")
 

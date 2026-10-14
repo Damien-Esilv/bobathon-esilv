@@ -1,11 +1,17 @@
 # %% [markdown]
-# # 00_best_model — stable best-submission dispatcher
+# # 00_best_model — Stable Best-Submission Dispatcher
 #
-# This file contains no model code. It loads `run()` from whichever numbered
-# experiment currently holds the lowest GroupKFold RMSE and calls it.
+# **Team: parKINGson**
+# **Members:** Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
 #
-# To nominate a new winner, change the one WINNER line below.
-# The filename (00_best_model) and Hub key (best_submission) never change.
+# This file serves as the canonical entry point for the winning model.
+# It dynamically imports and executes `run()` from whichever experiment
+# achieved the lowest patient-grouped cross-validation RMSE.
+#
+# Inputs:
+#   None (delegates to the selected experiment's run() function).
+# Outputs:
+#   Generates `submissions/best_submission.csv` and pushes the report to Skore Hub.
 
 # %%
 import importlib.util
@@ -13,7 +19,7 @@ import sys
 from pathlib import Path
 
 # ↓ Change this filename to point at the current winning experiment.
-WINNER = "12_multi_paradigm_bernstein_sota.py"
+WINNER = "13_super_moe_final_sota.py"
 
 # --- loader (do not edit below this line) ---
 _winner_path = Path(__file__).parent / WINNER

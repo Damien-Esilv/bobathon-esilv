@@ -1,16 +1,16 @@
 # %% [markdown]
-# # 10_retrospective_smoothing — Calibrated dual-regime ensemble
+# # 10_retrospective_smoothing — Calibrated Dual-Regime Ensemble
+#
+# **Team: parKINGson**
+# **Members:** Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
 #
 # Blends `08_clinical_gbdt` (DualBranchGBDT) and `09_sequence_transformer`
 # (SeqNet) under a per-regime convex combination:
 #
 #   ŷ = α * ŷ_SeqNet + (1 − α) * ŷ_GBDT
 #
-# where α = α_obs when off is observed, α_miss when off is missing.
-#
-# Blend weights are optimized on pooled out-of-fold predictions via a fine
-# grid search. A clustered bootstrap test (10,000 resamples, clustered by
-# patient_id) quantifies P(RMSE_blend < RMSE_SeqNet).
+# where α = α_obs when OFF is observed, and α_miss when OFF is missing.
+# Ensemble weights are optimized on pooled out-of-fold predictions.
 
 # %%
 import sys
@@ -256,16 +256,26 @@ def _optimize_weights(
     targets: np.ndarray,
     off_missing: np.ndarray,
 ) -> tuple[float, float]:
-    """Grid search α_obs, α_miss ∈ [0, 1] in steps of 0.01.
+    """Perform fine grid search to optimize convex blend weights across clinical regimes.
 
-    Returns (alpha_obs, alpha_miss) minimizing pooled RMSE.
+    Inputs:
+        preds_gbdt (np.ndarray): Out-of-fold predictions from DualBranchGBDT.
+        preds_seqnet (np.ndarray): Out-of-fold predictions from SeqNet Transformer.
+        targets (np.ndarray): True target values (MDS-UPDRS true OFF).
+        off_missing (np.ndarray): Boolean mask indicating visits where OFF was missing.
+
+    Outputs:
+        tuple[float, float]: (alpha_obs, alpha_miss) that minimizes pooled cross-validation RMSE.
     """
     best_rmse = np.inf
     best_obs, best_miss = 0.5, 0.5
     grid = np.arange(0.0, 1.01, 0.01)
+    
+    # Evaluate 2D grid of weights: alpha_obs for OFF-present, alpha_miss for OFF-missing
     for a_obs in grid:
         for a_miss in grid:
             alpha = np.where(off_missing, a_miss, a_obs)
+            # Clip blended predictions to valid clinical bounds [0, 132]
             blend = np.clip(alpha * preds_seqnet + (1.0 - alpha) * preds_gbdt, 0, 132)
             rmse = float(np.sqrt(np.mean((blend - targets) ** 2)))
             if rmse < best_rmse:
@@ -289,23 +299,35 @@ def _bootstrap_superiority(
     n_bootstrap: int = 10_000,
     rng_seed: int = 42,
 ) -> float:
-    """Clustered bootstrap: P(RMSE_blend < RMSE_SeqNet).
+    """Clustered bootstrap statistical test: P(RMSE_blend < RMSE_SeqNet).
 
-    Resamples at the patient level to respect within-patient correlation.
+    Resamples at the patient level (not visit level) to respect longitudinal correlation.
     Pre-aggregates squared errors by patient to compute the clustered test
-    in O(n_bootstrap) scalar operations rather than repetitive string matching.
+    in O(n_bootstrap) scalar operations.
+
+    Inputs:
+        preds_blend (np.ndarray): Ensemble predictions.
+        preds_seqnet (np.ndarray): Benchmark SeqNet predictions.
+        targets (np.ndarray): Ground-truth target scores.
+        patient_ids (np.ndarray): Patient identifier for each visit.
+        n_bootstrap (int): Number of bootstrap iterations. Default 10,000.
+        rng_seed (int): Random seed for reproducibility. Default 42.
+
+    Outputs:
+        float: Empirical probability that the ensemble outperforms SeqNet.
     """
     rng = np.random.default_rng(rng_seed)
     unique_patients, inverse_indices = np.unique(patient_ids, return_inverse=True)
     n_patients = len(unique_patients)
 
-    # Pre-aggregate squared error sum per patient
+    # Pre-aggregate squared errors per patient to make bootstrap vectorized and fast
     se_blend = (preds_blend - targets) ** 2
     se_seqnet = (preds_seqnet - targets) ** 2
     patient_se_blend = np.bincount(inverse_indices, weights=se_blend)
     patient_se_seqnet = np.bincount(inverse_indices, weights=se_seqnet)
     patient_diff = patient_se_blend - patient_se_seqnet
 
+    # Count fraction of patient-resampled datasets where blend achieves lower MSE
     n_wins = 0
     for _ in range(n_bootstrap):
         sampled_unique = np.unique(rng.integers(0, n_patients, size=n_patients))

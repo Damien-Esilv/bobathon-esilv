@@ -1,9 +1,13 @@
 # %% [markdown]
-# # 05_dataops — skrub DataOps graph with GroupKFold baked in
+# # 05_dataops — skrub DataOps Graph with Patient-Grouped CV Baked In
 #
-# Demonstrates the DataOps pattern where GroupKFold and patient groups live
-# on the graph, not as a side list that can drift. Validates that SkrubLearner
-# produces predictions on X_test (which has no `target` column).
+# **Team: parKINGson**
+# **Members:** Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+#
+# Demonstrates the declarative DataOps pattern:
+# - Patient grouping and GroupKFold are attached directly to the computation graph node.
+# - Eliminates the risk of passing mismatched split indices or features during evaluation.
+# - Evaluates using `SkrubLearner` to predict directly on `X_test`.
 
 # %%
 import sys
@@ -104,9 +108,17 @@ print(f"Wrote submissions/05_dataops.csv  ({len(submission)} rows)")
 
 # %%
 def run() -> None:
-    """Fit DataOps learner on full training data, write best_submission.csv, push Hub."""
+    """Fit DataOps learner on full training visits, write best_submission.csv, and push Hub report.
+
+    Inputs:
+        None (uses global training data visits and test data X_test).
+
+    Outputs:
+        None (writes submissions/best_submission.csv and updates Skore Hub).
+    """
     l = pred.skb.make_learner()
     l.fit({"visits": visits})
+    # Clip predictions to valid MDS-UPDRS scale [0, 132]
     preds = np.clip(l.predict({"visits": X_test}), 0, 132)
     pd.DataFrame({"Index": X_test["Index"], "target": preds}).to_csv(
         submissions_dir / "best_submission.csv", index=False

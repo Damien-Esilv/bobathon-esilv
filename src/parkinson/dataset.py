@@ -1,5 +1,8 @@
 """Patient visit sequence dataset for Parkinson's motor score prediction.
 
+Team: parKINGson
+Members: Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+
 Groups visits by patient, sorts chronologically by age, normalizes continuous
 features, encodes categorical columns, and assembles per-visit tensors for
 the SeqNet bi-directional Transformer. Stochastic OFF masking is applied

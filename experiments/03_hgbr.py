@@ -1,9 +1,13 @@
 # %% [markdown]
-# # 03_hgbr — HistGradientBoosting with native NaN handling
+# # 03_hgbr — HistGradientBoosting with Native Missing Value Handling
 #
-# Replaces Ridge + median imputation. HGBR routes NaN values at each split
-# so missingness in `off`, `ledd`, and timing columns becomes a direct signal
-# (skipped OFF exams correlate with worse disease state). No imputer step.
+# **Team: parKINGson**
+# **Members:** Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+#
+# Replaces Ridge + median imputation. HistGradientBoostingRegressor learns
+# optimal branch routing for NaN values at each tree split.
+# In clinical Parkinson's trials, missingness in `off` and `ledd` is informative:
+# skipping an exhausting OFF exam often correlates with worse disease severity.
 
 # %%
 import sys
@@ -86,8 +90,16 @@ print(f"Wrote submissions/03_hgbr.csv  ({len(submission)} rows)")
 
 # %%
 def run() -> None:
-    """Fit HGBR on full training data, write best_submission.csv, push Hub."""
+    """Fit HGBR on full training data, write best_submission.csv, and push Hub report.
+
+    Inputs:
+        None (uses global training data X, y, and X_test).
+
+    Outputs:
+        None (writes submissions/best_submission.csv and updates Skore Hub).
+    """
     model = HistGradientBoostingRegressor(random_state=42).fit(X, y)
+    # Clip predictions to valid MDS-UPDRS scale [0, 132]
     preds = np.clip(model.predict(X_test[FEATURE_COLS]), 0, 132)
     pd.DataFrame({"Index": X_test["Index"], "target": preds}).to_csv(
         submissions_dir / "best_submission.csv", index=False

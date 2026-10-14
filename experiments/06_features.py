@@ -1,9 +1,14 @@
 # %% [markdown]
-# # 06_features — Clinical feature engineering + TableVectorizer + HGBR
+# # 06_features — Clinical Feature Engineering + TableVectorizer + HGBR
 #
-# Extends the tabular pipeline with domain-knowledge features derived from
-# CONTEXT.md: disease progression duration, levodopa pharmacodynamics,
-# visit chronology, motor fluctuation size, and explicit missingness flags.
+# **Team: parKINGson**
+# **Members:** Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+#
+# Incorporates biostatistical features derived from disease physiology:
+# - Disease duration: `age - age_at_diagnosis` (tracks progression speed).
+# - Motor responsiveness: `on_off_delta = off - on` (levodopa treatment effect).
+# - Visit timeline order and patient visit frequency.
+# - Explicit indicators for missing clinical scores (`off_is_missing`, etc.).
 
 # %%
 import sys
@@ -92,11 +97,19 @@ print(f"Wrote submissions/06_features.csv  ({len(submission)} rows)")
 
 # %%
 def run() -> None:
-    """Fit feature-engineered pipeline on full training data, write best_submission.csv."""
+    """Fit feature-engineered pipeline on full training data, write best_submission.csv, and push Hub report.
+
+    Inputs:
+        None (uses global training data X_full, y, and X_test_full).
+
+    Outputs:
+        None (writes submissions/best_submission.csv and updates Skore Hub).
+    """
     m = make_pipeline(
         TableVectorizer(),
         HistGradientBoostingRegressor(random_state=42),
     ).fit(X_full, y)
+    # Clip predictions to valid MDS-UPDRS scale [0, 132]
     preds = np.clip(m.predict(X_test_full), 0, 132)
     pd.DataFrame({"Index": X_test["Index"], "target": preds}).to_csv(
         submissions_dir / "best_submission.csv", index=False

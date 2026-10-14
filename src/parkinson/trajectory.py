@@ -1,5 +1,8 @@
 """Monotonic Bernstein trajectory projector for Parkinson's motor score visits.
 
+Team: parKINGson
+Members: Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+
 Applies a per-patient degree-3 Bernstein polynomial curve constrained to be
 non-decreasing in age.  Raw blend predictions (from any upstream model) are
 replaced by values read off the fitted monotone curve at each visit's normalized

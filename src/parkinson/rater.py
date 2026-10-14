@@ -1,5 +1,8 @@
 """Rater calibration transformer for Parkinson's motor score prediction.
 
+Team: parKINGson
+Members: Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+
 Encodes clinician-level scoring leniency as a target-encoded feature with
 Bayesian shrinkage, preventing high-variance estimates from raters with few
 visits from dominating the signal.

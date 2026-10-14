@@ -1,5 +1,8 @@
 """Dual-branch LightGBM regressor for Parkinson's motor score prediction.
 
+Team: parKINGson
+Members: Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+
 Routes visits through two independent LGBMRegressor estimators at fit and
 predict time, based on whether the OFF clinic measurement was recorded:
 

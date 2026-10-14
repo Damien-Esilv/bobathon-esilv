@@ -1,11 +1,14 @@
 # %% [markdown]
-# # 04_skrub_tabular — TableVectorizer + HGBR with mixed-type features
+# # 04_skrub_tabular — TableVectorizer + HGBR with Mixed-Type Features
 #
-# Adds the categorical columns `gene`, `cohort`, and `rater_id` that the
-# numeric-only experiments ignored. `TableVectorizer` picks an encoder per
-# column automatically: one-hot for low-cardinality labels, `StringEncoder`
-# for high-cardinality strings, passthrough for numerics. HGBR still handles
-# NaN natively so no imputer is needed.
+# **Team: parKINGson**
+# **Members:** Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+#
+# Incorporates categorical columns (`gene`, `cohort`, `rater_id`) previously ignored.
+# `TableVectorizer` automatically selects the appropriate encoder per column:
+# - One-hot encoding for low-cardinality categoricals (e.g., `cohort`, `sexM`).
+# - `StringEncoder` for high-cardinality text (e.g., `gene`).
+# - Passthrough for numeric features, preserving NaNs for native HGBR split routing.
 
 # %%
 import sys
@@ -90,11 +93,19 @@ print(f"Wrote submissions/04_skrub_tabular.csv  ({len(submission)} rows)")
 
 # %%
 def run() -> None:
-    """Fit tabular pipeline on full training data, write best_submission.csv, push Hub."""
+    """Fit skrub TableVectorizer + HGBR pipeline on full training data and push Hub report.
+
+    Inputs:
+        None (uses global training data X_full, y, and X_test_full).
+
+    Outputs:
+        None (writes submissions/best_submission.csv and updates Skore Hub).
+    """
     m = make_pipeline(
         TableVectorizer(),
         HistGradientBoostingRegressor(random_state=42),
     ).fit(X_full, y)
+    # Clip predictions to valid MDS-UPDRS scale [0, 132]
     preds = np.clip(m.predict(X_test_full), 0, 132)
     pd.DataFrame({"Index": X_test["Index"], "target": preds}).to_csv(
         submissions_dir / "best_submission.csv", index=False

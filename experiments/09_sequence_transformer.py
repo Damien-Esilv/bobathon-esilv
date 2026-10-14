@@ -1,17 +1,14 @@
 # %% [markdown]
-# # 09_sequence_transformer — Bi-directional SeqNet for patient visit timelines
+# # 09_sequence_transformer — Bi-Directional SeqNet for Patient Visit Timelines
 #
-# Formulates Parkinson's MDS-UPDRS prediction as retrospective sequence
-# smoothing: each patient's complete visit timeline (past AND future visits
-# simultaneously) is fed to a bi-directional Transformer encoder. An anchored
-# residual head corrects the medication baseline (off if observed, else on)
-# rather than predicting raw scores.
+# **Team: parKINGson**
+# **Members:** Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
 #
-# Key design choices:
-#   - Anchored residual: ŷ = base + 20 × r̂  (base = off or on)
-#   - Stochastic OFF masking (p=0.35) forces reconstruction of missing OFF
-#   - AdamW + OneCycleLR cosine annealing; no weight EMA
-#   - Automatic device selection: MPS → CUDA → CPU
+# Formulates Parkinson's prediction as a sequence modelling problem:
+# - Each patient's entire visit history is processed via bi-directional Transformer self-attention.
+# - Anchored residual prediction: ŷ = base + 20 × r̂ (where base = off if observed, else on).
+# - Stochastic OFF masking (p=0.35) during training teaches the model to reconstruct missing OFF scores.
+# - Uses AdamW optimizer with OneCycleLR scheduler.
 
 # %%
 import sys

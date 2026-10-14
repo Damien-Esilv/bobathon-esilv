@@ -1,5 +1,8 @@
 """Time-decay attention Transformer + Bidirectional GRU for Parkinson's motor score.
 
+Team: parKINGson
+Members: Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+
 Architecture
 ------------
 1. Token embedding (same as SeqNet): continuous projection + categorical embeddings

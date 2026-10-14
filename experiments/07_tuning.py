@@ -1,14 +1,13 @@
 # %% [markdown]
-# # 07_tuning — HGBR hyperparameter tuning and blended ensemble
+# # 07_tuning — HGBR Hyperparameter Tuning and Blended Ensemble
 #
-# Tunes HistGradientBoostingRegressor on the enriched feature set from
-# 06_features. A two-seed blend gives a small RMSE gain over a single model.
+# **Team: parKINGson**
+# **Members:** Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
 #
-# Running this file directly performs the full grid search + blend evaluation
-# and pushes the 07_tuning report to Skore Hub.
-#
-# `run()` is self-contained: it uses the hardcoded winning params discovered
-# during the search (no re-search needed) and is called by 00_best_model.py.
+# Optimizes HistGradientBoostingRegressor hyperparameters on enriched features.
+# A grid search over learning rate, max leaf nodes, min samples per leaf, and
+# regularization discovers the optimal tree structure.
+# Blending two random seeds reduces variance and yields an additional RMSE improvement.
 
 # %%
 import sys
@@ -44,8 +43,19 @@ BEST_PARAMS = {
 }
 
 
-def _load_data():
-    """Load raw data and apply feature engineering. Returns X_full, y, groups, X_test_full, X_test."""
+def _load_data() -> tuple[pd.DataFrame, pd.Series, np.ndarray, pd.DataFrame, pd.DataFrame]:
+    """Load raw visits data, apply clinical feature engineering, and prepare splits.
+
+    Inputs:
+        None (reads X_train.csv, y_train.csv, X_test.csv from data/).
+
+    Outputs:
+        X_full (pd.DataFrame): Training feature matrix without target or identifiers.
+        y (pd.Series): Target vector.
+        groups (np.ndarray): Patient IDs for GroupKFold.
+        X_test_full (pd.DataFrame): Test feature matrix with engineered features.
+        X_test (pd.DataFrame): Raw test dataframe for Index column.
+    """
     X_train = pd.read_csv(PROJECT_ROOT / "data" / "X_train.csv")
     y_train = pd.read_csv(PROJECT_ROOT / "data" / "y_train.csv")
     X_test = pd.read_csv(PROJECT_ROOT / "data" / "X_test.csv")
@@ -65,11 +75,13 @@ def _load_data():
 
 # %%
 def run() -> None:
-    """Fit tuned HGBR (BEST_PARAMS) on full training data.
+    """Fit tuned HGBR (BEST_PARAMS) on full training data and generate submission.
 
-    Writes submissions/best_submission.csv clipped to [0, 132] and pushes
-    the report to Skore Hub as 'best_submission'.
-    No grid search is performed here — uses the hardcoded BEST_PARAMS above.
+    Inputs:
+        None (uses parameters discovered during grid search).
+
+    Outputs:
+        None (writes submissions/best_submission.csv and pushes report to Skore Hub).
     """
     X_full, y, groups, X_test_full, X_test = _load_data()
     submissions_dir = PROJECT_ROOT / "submissions"

@@ -1,6 +1,9 @@
 # %% [markdown]
 # # EDA: Parkinson's Motor Score (bobathon-esilv)
 #
+# **Team: parKINGson**
+# **Members:** Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+#
 # Exploratory data analysis of the Parkinson's motor score dataset,
 # run before designing a model.
 #

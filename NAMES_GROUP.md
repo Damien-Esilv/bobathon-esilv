@@ -1,7 +1,8 @@
-Damien	CATAU
-Malo	GERVAISE
-Esteban	GAUBERT
-Maximilien	STUDER
+# Team Composition
+## **Team Name (Kaggle):** `parKINGson` <br>
 
-
-Kaagle teams : parKINGson
+## **Team Members:**
+  1. **Damien CATAU**
+  2. **Malo GERVAISE**
+  3. **Esteban GAUBERT**
+  4. **Maximilien STUDER**

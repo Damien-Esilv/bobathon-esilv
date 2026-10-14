@@ -1,5 +1,8 @@
 """Longitudinal patient trajectory features for Parkinson's motor score prediction.
 
+Team: parKINGson
+Members: Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+
 Computes per-patient disease progression statistics from the chronological
 ON-score sequence. Two computational paths are supported:
 

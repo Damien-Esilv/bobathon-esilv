@@ -1,5 +1,8 @@
 """Clinical feature engineering for Parkinson's motor score prediction.
 
+Team: parKINGson
+Members: Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+
 All transforms are stateless: `build_features` can be applied identically to
 the training DataFrame and the test DataFrame without any fitted state or
 access to the target column.

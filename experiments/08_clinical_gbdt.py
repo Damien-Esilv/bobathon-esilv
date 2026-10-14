@@ -1,25 +1,21 @@
 # %% [markdown]
-# # 08_clinical_gbdt — Dual-branch LightGBM with clinical feature engineering
+# # 08_clinical_gbdt — Dual-Branch LightGBM with Clinical Feature Engineering
 #
-# Extends the baseline tabular pipeline with four domain-driven feature families
+# **Team: parKINGson**
+# **Members:** Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+#
+# Extends the tabular pipeline with four domain-driven feature families
 # and a dual-branch architecture that routes visits through two independent
 # LGBMRegressor estimators depending on whether the OFF clinic measurement is
-# available.
+# available:
+# - Branch A: when OFF is recorded (fits motor delta and direct OFF score).
+# - Branch B: when OFF is missing (relies on ON score and trajectory priors).
 #
-# Feature families added on top of experiment 07:
-#   - Bateman PK (levodopa plasma concentration curves via ka=1.5, ke=0.4 h⁻¹)
-#   - Temporal visit intervals (delta_index, delta_age between consecutive visits)
-#   - Patient progression statistics (per-patient OLS slope, residuals, ON stats)
-#   - Additional missingness flags (on_is_missing, both_missing)
-#
-# Fitted transformers (applied per CV fold for strict OOF metrics):
-#   - RaterCalibrator: Bayesian-shrinkage target encoding for rater_id
-#   - PatientTrajectoryTransformer: per-patient OLS slope of ON ~ age
-#
-# Evaluation reports three RMSE values:
-#   - Pooled RMSE (all visits)
-#   - Branch-A RMSE (visits where off was observed)
-#   - Branch-B RMSE (visits where off was missing)
+# Feature families added:
+#   - Bateman PK curves (levodopa plasma concentration via ka=1.5, ke=0.4 h⁻¹)
+#   - Temporal visit intervals (delta_age between consecutive visits)
+#   - Patient progression statistics (per-patient OLS slope and residuals)
+#   - Rater leniency calibration with Bayesian shrinkage
 
 # %%
 import sys
@@ -125,7 +121,13 @@ def _fit_preprocess_fold(
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Fit RaterCalibrator and PatientTrajectoryTransformer on the training fold.
 
-    Returns transformed (X_tr_t, X_val_t) with the fitted transformers applied.
+    Inputs:
+        X_tr (pd.DataFrame): Training fold features including rater_id and patient_id.
+        y_tr (pd.Series): Training fold target values.
+        X_val (pd.DataFrame): Validation fold features.
+
+    Outputs:
+        tuple[pd.DataFrame, pd.DataFrame]: (X_tr_t, X_val_t) with fitted calibrations applied.
     """
     rc = RaterCalibrator(shrinkage=10.0)
     rc.fit(X_tr, y_tr)
@@ -144,7 +146,15 @@ def _fit_preprocess_full(
     X_full: pd.DataFrame,
     y: pd.Series,
 ) -> pd.DataFrame:
-    """Fit both transformers on the full training set and return transformed X."""
+    """Fit both transformers on the full training set and return transformed X.
+
+    Inputs:
+        X_full (pd.DataFrame): All training visits.
+        y (pd.Series): All training targets.
+
+    Outputs:
+        pd.DataFrame: Transformed training feature matrix.
+    """
     rc = RaterCalibrator(shrinkage=10.0)
     rc.fit(X_full, y)
     X_rc = rc.transform(X_full)
@@ -159,7 +169,16 @@ def _fit_preprocess_test(
     y: pd.Series,
     X_test: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Fit transformers on full train, transform the test set."""
+    """Fit transformers on full train, transform the test set.
+
+    Inputs:
+        X_full (pd.DataFrame): Full training visits.
+        y (pd.Series): Full training targets.
+        X_test (pd.DataFrame): Test visits.
+
+    Outputs:
+        pd.DataFrame: Transformed test feature matrix.
+    """
     rc = RaterCalibrator(shrinkage=10.0)
     rc.fit(X_full, y)
     X_test_rc = rc.transform(X_test)

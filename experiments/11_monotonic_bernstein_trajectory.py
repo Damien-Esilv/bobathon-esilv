@@ -1,16 +1,13 @@
 # %% [markdown]
-# # 11_monotonic_bernstein_trajectory — Monotone Bernstein post-processor
+# # 11_monotonic_bernstein_trajectory — Monotone Bernstein Post-Processor
 #
-# Applies a per-patient degree-3 Bernstein trajectory projector on top of the
-# `RetrospectiveSmoothingRegressor` blend (exp 10).  The projector enforces
-# non-decreasing motor UPDRS predictions with age while preserving the blend's
-# clinical accuracy.
+# **Team: parKINGson**
+# **Members:** Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
 #
-# CV loop is identical to experiment 10; the Bernstein projection is applied
-# after `preds_blend` is computed in the main block.
-#
-# Output artefacts:
-#   submissions/11_monotonic_bernstein_trajectory.csv  (11 013 rows)
+# Enforces monotonic progression of Parkinson's motor degradation:
+# - Fits a constrained degree-3 Bernstein polynomial per patient across visits.
+# - Mathematically guarantees non-decreasing UPDRS score with age.
+# - Employs Huber-weighted 2-step iteratively reweighted least squares (IRLS).
 
 # %%
 import sys

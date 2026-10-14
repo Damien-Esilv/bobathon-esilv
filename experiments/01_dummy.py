@@ -1,8 +1,12 @@
 # %% [markdown]
-# # 01_dummy — Dummy mean baseline
+# # 01_dummy — Dummy Mean Baseline
+#
+# **Team: parKINGson**
+# **Members:** Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
 #
 # Establishes the error floor: a DummyRegressor that always predicts the
-# mean target over training visits. Every subsequent model must beat this RMSE.
+# empirical mean target over training visits. Any valid predictive model
+# must achieve an RMSE lower than this baseline (RMSE ≈ 16.48, matching target std).
 
 # %%
 import sys
@@ -68,10 +72,34 @@ submission.to_csv(submissions_dir / "01_dummy.csv", index=False)
 submission.shape  # noqa: B018
 
 # %% [markdown]
-# ## Push report to Skore Hub
+# ## run() — Standalone execution function
+#
+# Called by 00_best_model.py or standalone runner.
 
 # %%
-cfg = load_skore_credentials()
-login(mode="hub")
-project = Project(name="bobathon-esilv", mode="hub", workspace=cfg["workspace"])
-project.put("01_dummy", report)
+def run() -> None:
+    """Fit the dummy mean model on all training visits and write submission.
+
+    Inputs:
+        None (reads data from project data/ directory).
+
+    Outputs:
+        None (writes submissions/01_dummy.csv and updates Skore Hub).
+    """
+    # Baseline model: predicts mean target regardless of feature values.
+    model = DummyRegressor(strategy="mean")
+    model.fit(X, y)
+    preds = model.predict(X_test[FEATURE_COLS])
+    
+    out_path = submissions_dir / "01_dummy.csv"
+    pd.DataFrame({"Index": X_test["Index"], "target": preds}).to_csv(out_path, index=False)
+    print(f"Wrote {out_path} ({len(preds)} rows)")
+    
+    # Push report to Skore Hub
+    project.put("01_dummy", report)
+    print("Report pushed to Skore Hub as '01_dummy'")
+
+
+if __name__ == "__main__":
+    run()
+

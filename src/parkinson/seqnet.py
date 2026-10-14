@@ -1,5 +1,8 @@
 """Bi-directional Transformer sequence model for Parkinson's motor score prediction.
 
+Team: parKINGson
+Members: Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+
 Treats each patient's visit timeline as a padded sequence and predicts a
 normalized residual per visit. The residual is anchored to a medication baseline
 (off if observed, else on) so the model corrects known biased measurements rather

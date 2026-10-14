@@ -1,9 +1,13 @@
 # %% [markdown]
-# # 02_ridge — Ridge regression with patient-grouped CV
+# # 02_ridge — Ridge Regression with Patient-Grouped Cross-Validation
 #
-# First real linear model. Numeric features only (Ridge cannot ingest NaN so
-# median-impute). Alpha sweep over [0.1, 1.0, 10.0, 100.0, 1000.0] with
-# GroupKFold(n_splits=5) to prevent patient leakage.
+# **Team: parKINGson**
+# **Members:** Damien CATAU, Malo GERVAISE, Esteban GAUBERT, Maximilien STUDER
+#
+# First real linear model. Evaluates numeric features with median imputation
+# (required because standard Ridge cannot handle missing values).
+# Performs an alpha sweep over [0.1, 1.0, 10.0, 100.0, 1000.0] with
+# `GroupKFold(n_splits=5)` on `patient_id` to prevent data leakage.
 
 # %%
 import sys
@@ -102,11 +106,19 @@ print(f"Wrote submissions/02_ridge.csv  ({len(submission)} rows)")
 
 # %%
 def run() -> None:
-    """Fit best Ridge on full training data, write best_submission.csv, push Hub."""
+    """Fit best Ridge pipeline on full training data, write best_submission.csv, and push Hub report.
+
+    Inputs:
+        None (uses global training data and best_alpha discovered during CV).
+
+    Outputs:
+        None (writes submissions/best_submission.csv and updates Skore Hub).
+    """
     model = make_pipeline(
         SimpleImputer(strategy="median"),
         Ridge(alpha=best_alpha),
     ).fit(X, y)
+    # Clip predictions to valid MDS-UPDRS scale [0, 132]
     preds = np.clip(model.predict(X_test[FEATURE_COLS]), 0, 132)
     pd.DataFrame({"Index": X_test["Index"], "target": preds}).to_csv(
         submissions_dir / "best_submission.csv", index=False
